@@ -1,0 +1,177 @@
+#include <EEPROM.h>
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+#define menu 5
+#define arti 4
+#define eksi 3
+#define role 2
+int menu_b = 0;
+int arti_b = 0;
+int eksi_b = 0;
+
+int a_set = 0;
+int u_set=0;
+
+int Termistor(int analogOkuma)
+{
+  double sicaklik;
+  sicaklik = log(((10240000 / analogOkuma) - 10000));
+  sicaklik = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * sicaklik * sicaklik )) * sicaklik );
+  sicaklik = sicaklik - 273.15;
+  return sicaklik;
+}
+
+
+void setup()
+{
+  pinMode(role, OUTPUT);
+  pinMode(menu, INPUT);
+  pinMode(arti, INPUT);
+  pinMode(eksi, INPUT);
+
+  Serial.begin(9600);
+  lcd.begin();
+  lcd.home();
+  lcd.setCursor(0, 0);
+  lcd.print("SENTURK  YAZILIM");
+  lcd.setCursor(2, 1);
+  lcd.print("0531 371 3276");
+  delay (50);
+  lcd.clear();
+}
+
+void loop()
+{
+  a_set = EEPROM.read(1);
+  u_set = EEPROM.read(2);
+  lcd.setCursor(0, 0);
+  lcd.print("sicaklik: ");
+  int deger;
+  int sicaklik;
+  deger = analogRead(A0);
+  sicaklik = Termistor(deger);
+  lcd.setCursor(9, 0);
+  lcd.print(sicaklik);
+  delay(100);
+
+  menu_b = digitalRead(menu);
+  arti_b = digitalRead(arti);
+  eksi_b = digitalRead(eksi);
+
+  if(a_set>sicaklik){digitalWrite(role,HIGH);}
+   if(u_set<sicaklik){digitalWrite(role,HIGH);}
+
+  if (menu_b == HIGH)
+  {
+    lcd.clear();
+     while (1) 
+        {
+        
+          lcd.setCursor(0, 0);
+          lcd.print("ALT DEGER:");
+          lcd.print(a_set);
+          Serial.println(a_set);
+          arti_b = digitalRead(arti);
+          eksi_b = digitalRead(eksi);
+                        if (arti_b == HIGH)
+                        {
+                          a_set++;
+                          EEPROM.write(1, a_set);
+                          while (1) 
+                                  {
+                                    arti_b = digitalRead(arti);
+                                    if (arti_b == LOW) 
+                                    {
+                                      lcd.clear();
+                                      break;
+                                    }
+                                  }
+                  
+                  
+                        }
+                        if (eksi_b == HIGH)
+                        {
+                          a_set--;
+                          EEPROM.write(1, a_set);
+                          while (1) {
+                                            eksi_b = digitalRead(eksi);
+                                            if (eksi_b == LOW) 
+                                            {
+                                              lcd.clear();
+                                              break;
+                                            }
+                                     }
+                        }
+                  
+                       delay(100);
+                          menu_b = digitalRead(menu);
+                                if(menu_b==HIGH)
+                                {
+                                  lcd.clear();
+                                              while(1)
+                                              {
+                                                          lcd.setCursor(0, 0);
+                                                          lcd.print("UST DEGER:");
+                                                          lcd.print(u_set);
+                                                          Serial.println(u_set);
+                                                          arti_b = digitalRead(arti);
+                                                          eksi_b = digitalRead(eksi);
+                                                                        if (arti_b == HIGH)
+                                                                        {
+                                                                          u_set++;
+                                                                          EEPROM.write(2, u_set);
+                                                                          while (1) 
+                                                                                  {
+                                                                                    arti_b = digitalRead(arti);
+                                                                                    if (arti_b == LOW) 
+                                                                                    {
+                                                                                      lcd.clear();
+                                                                                      break;
+                                                                                    }
+                                                                                  }
+                                                                  
+                                                                  
+                                                                        }
+                                                                        if (eksi_b == HIGH)
+                                                                        {
+                                                                          u_set--;
+                                                                          EEPROM.write(1, u_set);
+                                                                          while (1) {
+                                                                                            eksi_b = digitalRead(eksi);
+                                                                                            if (eksi_b == LOW) 
+                                                                                            {
+                                                                                              lcd.clear();
+                                                                                              break;
+                                                                                            }
+                                                                                     }
+                                                                        }
+                                              
+                                                                       delay(100);
+                                                                        menu_b = digitalRead(menu);
+                                                                     if(menu_b==HIGH)
+                                                                                   {
+                                                                                       lcd.clear();
+                                                                                       break;
+                                                                                     
+                                                                                   }
+                                                                                   
+                                              }///ikinci while
+                                              
+                                  
+                                }//İkinci menü
+                        delay(100);
+                        menu_b = digitalRead(menu);
+                        if(menu_b==HIGH)
+                        {
+                         lcd.clear();
+                          break;
+                        }
+                        
+              }//wwhile1
+  }//menu if
+  
+}
